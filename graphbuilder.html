@@ -1,0 +1,689 @@
+
+<html>
+	<head>
+		<style>
+			body {
+			  overflow: hidden;
+			}
+
+			.container {
+			  max-width: 100%;
+			  margin-left: 0px;
+			  margin-right: 0px;
+			  min-height: 1200px;
+			}
+
+			#editPanel {
+			  position: absolute;
+			  right: -320px;
+			  width: 300px;
+			  height: 100%;
+			  background: #cae2d5;
+			  z-index: 1;
+			  border-left: 6px solid #b7b7b7;
+			}
+
+			#editPanel-form-group {
+			  width: 80%;
+			  margin-left: auto;
+			  margin-right: auto;
+			  display: block;
+			}
+
+			#editPanel-header {
+			  margin-top: 25px;
+			  margin-bottom: 50px;
+			  text-align: center;
+			}
+
+			#editPanel-header-title {
+			  font-size: 33px;
+			}
+
+			.editPanel-header-subtitle {
+			  font-size: 13px;
+			}
+
+			#pyramid-area {
+			  width: 900px;
+			  min-height: 1200px;
+			  left: 28%;
+			  position: relative;
+			}
+
+			#graph {
+			  float: left;
+			  position: relative;
+			  z-index: 1;
+			  display: none;
+			  border-left: 8px solid #b7b7b7;
+			}
+
+			#pyramid {
+			  width: 900px;
+			  display: inline-block;
+			  margin-bottom: 40px;
+			  margin-top: 40px;
+			  font-size: 22px;
+			  line-height: 50px;
+			}
+
+			.row-square-fix {
+			  right: 0;
+			  height: 50px;
+			  width: 0px;
+			  position: absolute;
+			  background: white;
+			}
+
+			.pyramid-row {
+			  z-index: -1;
+			  position: relative;
+			  margin-bottom: 1px;
+			  height: 50px;
+			  margin-left: auto;
+			  margin-right: auto;
+			}
+
+			.pyramid-row:hover {
+			  cursor: pointer;
+			}
+
+			.pyramid-row-selected {
+			  width: 100%;
+			  display: none;
+			  z-index: 1;
+			  position: absolute;
+			  overflow: hidden;
+			}
+
+			.pyramid-row-selected-background {
+			  width: 100%;
+			  height: 108px;
+			  background: rgba(178, 226, 211, 0.6);
+			}
+
+			.pyramid-row-selected-underblock {
+			  width: 450px;
+			  top: 150px;
+			  height: 450px;
+			  background: rgba(30, 30, 30, 0.2);
+			}
+
+			.pyramid-row-center {
+			  height: 50px;
+			  color: white;
+			  vertical-align: top;
+			  float: left;
+			  text-align: center;
+			}
+
+			.pyramid-row-left {
+			  border-top: 50px solid white;
+			  border-right: 44px solid transparent;
+			  float: left;
+			}
+
+			.pyramid-row-right {
+			  border-top: 50px solid white;
+			  border-left: 44px solid transparent;
+			  float: left;
+			}
+
+			.conceptG text {
+			  pointer-events: none;
+			}
+
+			marker {
+			  fill: #333;
+			}
+
+			g.conceptG circle {
+			  fill: #F6FBFF;
+			  stroke: #333;
+			  stroke-width: 2px;
+			}
+
+			g.conceptG:hover circle {
+			  fill: rgb(200, 238, 241);
+			}
+
+			g.selected circle {
+			  fill: rgb(250, 232, 255);
+			}
+
+			g.selected:hover circle {
+			  fill: rgb(250, 232, 255);
+			}
+
+			path.link {
+			  fill: none;
+			  stroke: #333;
+			  stroke-width: 6px;
+			  cursor: default;
+			}
+
+			path.link:hover {
+			  stroke: rgb(94, 196, 204);
+			}
+
+			g.connect-node circle {
+			  fill: #BEFFFF;
+			}
+
+			path.link.hidden {
+			  stroke-width: 0;
+			}
+
+			path.link.selected {
+			  stroke: rgb(229, 172, 247);
+			}
+
+		</style>
+	</head>
+
+	<body>
+		<div class="container">
+		  <div id="pyramid-area">
+		    <div id="pyramid"></div>
+		    <form class="form-horizontal step2-hidden" id="layerForm" method="post" name="layerForm">
+		      <div class="form-group">
+		        <label for="layer">Layer Name:</label>
+		        <input class="form-control" id="layer" name="layer" type="text">
+		      </div>
+		      <div class="form-group">
+		        <button class="btn btn-default btn-lg btn-block" id="addRow" type="submit">Add Layer</button>
+		        <button class="btn btn-default btn-lg btn-block disabled" id="removeLastRow" type="button">Remove Last Layer</button>
+		        <button class="btn btn-primary btn-lg btn-block disabled" id="addEntities" style="margin-top:20px" type="button">Add Entities
+		        </button>
+		      </div>
+		    </form>
+		  </div>
+		  <div id="graph">
+		  </div>
+		  <div id="editPanel">
+		    <div id="editPanel-header">
+		      <div id="editPanel-header-title">
+		      </div>
+		      <div id="editPanel-header-subtitle">
+		      </div>
+		    </div>
+		    <div id="editPanel-form-group">
+		      <div id="editPanel-parent-controls">
+
+		        <form class="form-horizontal" id="editPanel-parent-form" method="post" name="editPanel-parent-form">
+		          <label for="editPanel-childName">Child Name:</label>
+
+		          <input class="form-control" id="editPanel-childName" name="editPanel-childName" type="text">
+
+		          <button class="btn btn-primary btn-block" style="margin-top:5px" id="editPanel-addChild" type="submit">Add child</button>
+		        </form>
+		      </div>
+		      <button class="btn btn-primary btn-block" id="editPanel-navigateInto" type="submit">Navigate into</button>
+		    </div>
+
+		  </div>
+		</div>
+
+	</body>
+	<script>
+		"use strict";
+
+		class Page {
+		  constructor() {
+		    this.currentPage = 1;
+
+		    this.nodes = {
+		      0: {
+		        id: 0,
+		        level: 0,
+		        title: "GameSpot",
+		        children: []
+		      }
+		    }
+
+		    this.nodeStack = {
+		      node: this.nodes[0]
+		    }
+
+
+		    this.pyramid = new Pyramid($('#pyramid'), this);
+		    this.addEventHandlers();
+		    this.initializeGraph(this.nodes[0], true);
+		  }
+
+		  addNode(parent, name) {
+		    let newNodeId = this.graph.idct++;
+		    let newNode = {
+		      id: newNodeId,
+		      level: parent.level + 1,
+		      title: name,
+		      children: []
+		    }
+
+		    this.nodes[newNodeId] = newNode;
+		    parent.children.push(newNodeId);
+		    this.initializeGraph(parent);
+		  }
+
+		  initializeGraph(parent, isInitial) {
+		    var docEl = document.documentElement,
+		      bodyEl = document.getElementsByTagName('body')[0];
+
+		    var width = (window.innerWidth || docEl.clientWidth || bodyEl.clientWidth) - 505,
+		      height = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
+
+		    if (this.pyramid.$selectedRow != undefined && this.pyramid.$selectedRow[0] != $('#row_' + parent.level)[0]) {
+		      let prev = this.nodeStack;
+		      let newNodeStack = {
+		        node: parent,
+		        prev: prev
+		      }
+
+		      this.nodeStack = newNodeStack;
+		      this.pyramid.selectRow($('#row_' + parent.level), parent.level);
+		    }
+
+		    parent.x = width / 2 - 25;
+		    parent.y = 95 + (parent.level * 50);
+
+		    let svgNodes = [];
+		    let svgEdges = [];
+
+		    svgNodes.push(parent);
+		    svgNodes.concat(parent.children);
+
+		    var currentX = parent.x - 150;
+		    parent.children.forEach((childId) => {
+		      let child = this.nodes[childId];
+
+		      child.x = currentX;
+		      child.y = parent.y + 175;
+
+		      svgNodes.push(child);
+
+		      svgEdges.push({
+		        source: parent,
+		        target: child
+		      })
+
+		      currentX += 150;
+		    });
+
+		    $('#graph').empty();
+		    /** MAIN SVG **/
+		    let svg = d3.select("#graph").append("svg")
+		      .attr("width", width)
+		      .attr("height", height);
+
+		    let initialIdct;
+		    if (this.graph != undefined) {
+		      initialIdct = this.graph.idct;
+		    } else {
+		      initialIdct = svgNodes.length;
+		    }
+
+		    this.graph = new GraphCreator(svg, svgNodes, svgEdges, this);
+		    this.graph.idct = initialIdct;
+
+		    this.graph.updateGraph();
+		    this.refreshPanel(parent, isInitial ? false : true);
+		  }
+
+		  nextPage() {
+		    if (this.currentPage == 1) {
+		      $('.step2-hidden').fadeOut({
+		        duration: 400,
+		        complete: this.pyramid.minimize()
+		      });
+
+		      this.currentPage++;
+		    }
+		  }
+
+		  refreshPanel(node, show) {
+		    if (show) {
+		      $('#editPanel-header-title').text(node.title);
+		      $('#editPanel-header-subtitle').html('id: ' + node.id + '<br/> children: ' + node.children.length);
+
+		      $('#editPanel-navigateInto').unbind();
+		      $('#editPanel-navigateInto').click(() => {
+		        this.initializeGraph(node);
+		      });
+
+		      if (this.nodeStack.node != node) {
+		        $('#editPanel-parent-controls').css('display', 'none');
+		        $('#editPanel-navigateInto').css('display', '');
+		      } else {
+		        $('#editPanel-parent-controls').css('display', '');
+		        $('#editPanel-navigateInto').css('display', 'none');
+		      }
+
+
+		      $('#editPanel').animate({
+		        right: '0px'
+		      }, 500);
+		    } else {
+		      $('#editPanel').animate({
+		        right: '-320px'
+		      }, 500);
+		    }
+		  }
+
+		  addEventHandlers() {
+		    $("#addEntities").on("click", () => {
+		      this.nextPage();
+		    });
+		    $('#removeLastRow').on("click", () => {
+		      this.pyramid.removeLastRow();
+		    });
+		  }
+		}
+
+		class Pyramid {
+
+		  constructor($pyramidEl, parent) {
+		    this.noRows = 0;
+		    this.maxRows = 6;
+		    this.baseWidth = 30;
+		    this.baseWidthStepSize = 10;
+		    this.$pyramidEl = $pyramidEl;
+		    this._parent = parent;
+		    this.bottomLayer;
+
+		    this.rgbData = {
+		      r: {
+		        current: 32,
+		        step: -2
+		      },
+		      g: {
+		        current: 166,
+		        step: 6
+		      },
+		      b: {
+		        current: 124,
+		        step: 13
+		      }
+		    }
+		  }
+
+		  makeRGBStep(noSteps) {
+		    let rate = 1.2;
+		    this.rgbData.r.current += Math.floor(this.rgbData.r.step * rate) * noSteps;
+		    this.rgbData.g.current += Math.floor(this.rgbData.g.step * rate) * noSteps;
+		    this.rgbData.b.current += Math.floor(this.rgbData.b.step * rate) * noSteps;
+		  }
+
+		  minimize() {
+		    $('#pyramid-area').animate({
+		      width: '450px',
+		      left: '0%'
+		    }, 1750, () => {
+		      $('#pyramid-area').css('float', 'left');
+		      $('#pyramid-area').css('position', 'static');
+		      $('#graph').fadeIn();
+		      $('.pyramid-row').css('z-index', '0');
+		      this.selectRow($('#row_0'), 0);
+		    });
+
+		    $('#pyramid').animate({
+		      width: '430px',
+		      'font-size': '12px'
+		    }, 2000);
+
+		    $('.pyramid-row-right').animate({
+		      'border-left-width': '20px'
+		    }, 2000);
+
+		    $('.pyramid-row-left').animate({
+		      'border-right-width': '20px'
+		    }, 2000);
+
+		    $('.pyramid-row-center').animate({
+		      'width': 'calc(100% - 40px)'
+		    }, 2000);
+
+		    $('.row-square-fix').animate({
+		      'width': '48px'
+		    }, 1800);
+		  }
+
+		  removeLastRow() {
+		    if (this.noRows > 1) {
+		      this.bottomLayer.layer.slideUp({
+		        duration: 400,
+		        complete: () => {
+		          this.bottomLayer.layer.remove();
+		          this.bottomLayer = this.bottomLayer.previousLayer;
+		        }
+		      });
+
+		      this.noRows--;
+		      this.baseWidth -= this.baseWidthStepSize;
+		      this.makeRGBStep(-1);
+		      this.updateActiveButtons();
+		    }
+		  }
+
+		  updateActiveButtons() {
+		    if (this.noRows > 1) {
+		      $('#removeLastRow').removeClass('disabled');
+		    } else {
+		      $('#removeLastRow').addClass('disabled');
+		    }
+
+		    if (this.noRows >= this.maxRows) {
+		      $('#addRow').addClass('disabled');
+		    } else {
+		      $('#addRow').removeClass('disabled');
+		    }
+
+
+		    if (this.noRows >= 2) {
+		      $('#addEntities').removeClass('disabled');
+		    } else {
+		      $('#addEntities').addClass('disabled');
+		    }
+		  }
+
+		  selectRow($selectedRow, level) {
+		    this.unselectRow();
+		    this.$selectedRow = $selectedRow;
+
+		    let originalBackground = this.$selectedRow.attr('originalBackground');
+		    let noOpacityBackground = originalBackground.replace('0.6', '1');
+
+		    $selectedRow.animate({
+		      'margin-bottom': '45px',
+		      'margin-top': '30px',
+		      'background-color': 'green'
+		    });
+
+		    var selectedRowBackgroundHeight = (this.noRows - level - 1) * 51 + 125;
+		    selectedRowBackgroundHeight += level == this.noRows - 1 ? -17 : 15;
+
+		    $selectedRow.prev().css('height', selectedRowBackgroundHeight + 'px');
+		    $selectedRow.prev().fadeIn();
+
+		    if (level != undefined && this._parent.nodeStack.node.level > level) {
+		      while (this._parent.nodeStack.node.level != level) {
+		        this._parent.nodeStack = this._parent.nodeStack.prev;
+		      }
+		      this._parent.initializeGraph(this._parent.nodeStack.node);
+		    }
+		  }
+
+		  unselectRow() {
+		    if (this.$selectedRow != undefined && this.$selectedRow != null) {
+
+		      let originalBackground = this.$selectedRow.attr('originalBackground');
+
+		      this.$selectedRow.animate({
+		        'margin-bottom': '1px',
+		        'margin-top': '0px',
+		        'background-color': originalBackground
+		      });
+
+		      this.$selectedRow.prev().fadeOut();
+		      this.$selectedRow = null;
+		    }
+		  }
+
+		  addRow(layerName, params) {
+		    var self = this;
+
+		    if (this.noRows >= this.maxRows) {
+		      return;
+		    }
+
+		    let $pyramidRow = $('<div/>', {
+		      id: 'row_' + this.noRows,
+		      class: 'pyramid-row',
+		      css: {
+		        width: "calc(" + this.baseWidth + "% + 88px)",
+		        display: "none",
+		        background: "rgba(" + this.rgbData.r.current + ", " + this.rgbData.g.current + ", " + this.rgbData.b.current + ", 0.6)"
+		      }
+		    });
+
+		    let $pyramidRowSelected = $('<div/>', {
+		      id: 'row_' + this.noRows + '_selected',
+		      class: 'pyramid-row-selected'
+		    });
+
+		    let $pyramidRowSelectedBackground = $('<div/>', {
+		      class: 'pyramid-row-selected-background'
+		    });
+
+		    let $pyramidRowSelectedUnderblock = $('<div/>', {
+		      class: 'pyramid-row-selected-underblock'
+		    });
+
+		    $pyramidRowSelected.append($pyramidRowSelectedBackground);
+		    $pyramidRowSelected.append($pyramidRowSelectedUnderblock);
+
+		    $pyramidRow.attr('originalBackground', $pyramidRow.css("background"));
+		    $pyramidRow.hover(function(e) {
+		      if (!self.$selectedRow || self.$selectedRow[0] != $(this)[0]) {
+		        let originalBackground = $(this).attr('originalBackground');
+		        let noOpacityBackground = originalBackground.replace('0.6', '1');
+
+		        $(this).css("background", e.type === "mouseenter" ? noOpacityBackground : originalBackground);
+
+		      }
+		    });
+
+		    $pyramidRow.click(function() {
+		      self.selectRow($(this), $(this).attr('id').split('_')[1]);
+		    });
+
+		    $pyramidRow.append($('<div>', {
+		      class: 'pyramid-row-left'
+		    }));
+		    $pyramidRow.append($('<div>', {
+		      class: 'pyramid-row-center',
+		      text: layerName,
+		      css: {
+		        width: "calc(100% - 88px)"
+		      }
+		    }));
+		    $pyramidRow.append($('<div>', {
+		      class: 'pyramid-row-right'
+		    }));
+
+		    $pyramidRow.append($('<div>', {
+		      class: 'row-square-fix'
+		    }));
+
+		    this.$pyramidEl.append($pyramidRowSelected);
+		    this.$pyramidEl.append($pyramidRow);
+
+		    if (params && params.slideDown) {
+		      $pyramidRow.slideDown("slow");
+		    } else {
+		      $pyramidRow.show();
+		    }
+
+		    let currentLayer = this.bottomLayer;
+
+		    this.bottomLayer = {
+		      layer: $pyramidRow,
+		      previousLayer: currentLayer
+		    }
+
+		    this.baseWidth += this.baseWidthStepSize;
+		    this.noRows++;
+		    this.makeRGBStep(1);
+		    this.updateActiveButtons();
+		  }
+		}
+
+
+		$(document).ready(function() {
+		  let page = new Page();
+		  page.pyramid.addRow('Company');
+
+		  $('#layerForm').validate({
+		    rules: {
+		      layer: {
+		        minlength: 3,
+		        maxlength: 15,
+		        required: true
+		      }
+		    },
+		    highlight: function(element) {
+		      $(element).closest('.form-group').addClass('has-error');
+		    },
+		    unhighlight: function(element) {
+		      $(element).closest('.form-group').removeClass('has-error');
+		    },
+		    errorElement: 'span',
+		    errorClass: 'help-block',
+		    errorPlacement: function(error, element) {
+		      if (element.parent('.input-group').length) {
+		        error.insertAfter(element.parent());
+		      } else {
+		        error.insertAfter(element);
+		      }
+		    },
+		    submitHandler: function(form) {
+		      let layerName = $('#layer').val();
+		      $('#layer').val('');
+		      page.pyramid.addRow(layerName, {
+		        slideDown: true
+		      });
+		    }
+		  });
+
+		  $('#editPanel-parent-form').validate({
+		    rules: {
+		      'editPanel-childName': {
+		        minlength: 3,
+		        maxlength: 15,
+		        required: true
+		      }
+		    },
+		    highlight: function(element) {
+		      $(element).closest('.form-group').addClass('has-error');
+		    },
+		    unhighlight: function(element) {
+		      $(element).closest('.form-group').removeClass('has-error');
+		    },
+		    errorElement: 'span',
+		    errorClass: 'help-block',
+		    errorPlacement: function(error, element) {
+		      if (element.parent('.input-group').length) {
+		        error.insertAfter(element.parent());
+		      } else {
+		        error.insertAfter(element);
+		      }
+		    },
+		    submitHandler: function(form) {
+		      let childName = $('#editPanel-childName').val();
+		      page.addNode(page.nodeStack.node, childName);
+		      $('#editPanel-childName').val('');
+		    }
+		  });
+		});
+		</script>
+	</html>
